@@ -1,7 +1,8 @@
 Introduction
 ============
 
-The trace-cmd command interacts only with the Ftrace tracer that is built inside the Linux kernel. It is a user-space front-end command-line tool for Ftrace. But we need to use sometimes with systrace to optimize the performance in some systems. So we need a tool to parsing the systrace to be simiar with trace-cmd.
+ The trace-cmd command interacts only with the Ftrace tracer that is built inside the Linux kernel. It is a user-space front-end command-line tool for Ftrace. However Ftrace is not enough to analysis performance problem. We need to use systrace and perf tools with the trace-cmd to optimize the performance in android systems. 
+ We can store a dataframe object in pandas with the raw data in Ftrace using the trace-cmd, but it is disable in the case of the systrace. So this systrace parser llbrary support a way to store a dataframe with the raw data in systrace, likes the trace-cmd. 
 
 
 Motivations
@@ -16,7 +17,9 @@ The main goals of Systrace Parser are:
 Install
 =======
 
-pip install numpy
+This systrace parser use some pyhton libraries, numpy and pandas. So those should be included in your local computer.
+
+pip install numpy</br>
 pip install pandas
 
 

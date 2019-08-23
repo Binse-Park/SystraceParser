@@ -212,7 +212,10 @@ class parser_range:
 		result['time'] = float(sched_marks[-1])
 		for sched_mark in sched_marks:
 			if '[' in sched_mark and ']' in sched_mark and len(sched_mark) == 5:
-				result['core'] = int(sched_mark.strip('[]'))
+				try :
+					result['core'] = int(sched_mark.strip('[]'))
+				except:
+					pass
 		return result
 
 	def update_sched_time(self, sched_itemes, pid):

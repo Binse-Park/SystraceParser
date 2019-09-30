@@ -5,6 +5,7 @@ TRACE_MARK = 'tracing_mark_write:'
 SCHED_SWITCH = 'sched_switch:'
 SCHED_WAKEUP = 'sched_wakeup:'
 SCHED_BLOCKED_REASON = 'sched_blocked_reason:'
+CPU_FREQUENCY_LIMITS = 'cpu_frequency_limits'
 
 TAG_RUNNING = 'RUNNING'
 TAG_RUNNABLE = 'RUNNABLE'
@@ -121,6 +122,7 @@ class parser_range:
 		self.title = title
 		self.result_times = dict()   # Storing the time data.
 		self.trace_mark_traversal = dict() # Storing the systrace tag's context to check end of it.
+		self.result_cores = dict() # Storing the cpufreq limits.
 
 	def parser_trace_mark(self, str):
 		result = dict()
@@ -198,6 +200,44 @@ class parser_range:
 		#        print(trace_mark)
 
 
+
+##################################################################################################################################################################
+#	DEFINE FUNCTIONS FOR CORE PARSER
+##################################################################################################################################################################
+
+	def parser_core_mark(self, str):
+		result = dict()
+		str = str.strip()
+		trace_items = str.split(' ')
+		for trace_item in trace_items:
+			if '=' in trace_item:
+				trace_item = trace_item.split('=')
+				result[trace_item[0]] = trace_item[1]
+
+		trace_marks = str.split(': cpu_frequency_limits')
+		trace_marks = trace_marks[0].split(' ')
+
+		try:
+			result['time'] = float(trace_marks[-1])
+		except:
+			pass
+
+		for trace_mark in trace_marks:
+			if '[' in trace_mark and ']' in trace_mark and len(trace_mark) == 5:
+				try :
+					result['core'] = int(trace_mark.strip('[]'))
+				except:
+					pass
+		return result
+
+	def cpu_frequency_limits(self, str):
+		self.result_cores[CPU_FREQUENCY_LIMITS] = self.trace_mark_traversal.get(CPU_FREQUENCY_LIMITS, list())
+		self.result_cores[CPU_FREQUENCY_LIMITS].append(self.parser_core_mark(str))
+
+##################################################################################################################################################################
+#	DEFINE FUNCTIONS FOR SCHED PARSER
+##################################################################################################################################################################
+
 	def parser_sched(self, str):
 		result = dict()
 		str = str.strip()
@@ -223,9 +263,6 @@ class parser_range:
 			for trace_mark_filter in self.result_times[pid]:
 				hierarchy.set(self.result_times[pid][trace_mark_filter], sched_itemes)
 
-##################################################################################################################################################################
-#	DEFINE FUNCTIONS FOR TRACE PARSER
-##################################################################################################################################################################
 
 	def sched_switch_func(self, str):
 		sched_itemes = self.parser_sched(str)
@@ -255,12 +292,14 @@ class parser_range:
 
 			self.update_sched_time(sched_itemes, int(sched_itemes['pid']))
 
+
 	def run(self):
 		type_filters = {
 			TRACE_MARK : self.trace_mark_func,
 			SCHED_SWITCH : self.sched_switch_func,
 			SCHED_WAKEUP : self.sched_wakeup_func,
 			SCHED_BLOCKED_REASON : self.sched_blocked_reason,
+			CPU_FREQUENCY_LIMITS : self.cpu_frequency_limits,
 		}
 
 		if len(self.result_times) > 0:

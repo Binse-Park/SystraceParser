@@ -200,6 +200,30 @@ class parser_range:
 		#        print(trace_mark)
 
 
+	def parser_sched(self, str):
+		result = dict()
+		str = str.strip()
+		sched_items = str.split(' ')
+		for sched_item in sched_items:
+			if '=' in sched_item:
+				sched_item = sched_item.split('=')
+				result[sched_item[0]] = sched_item[1]
+
+		sched_marks = str.split(': sched_')
+		sched_marks = sched_marks[0].split(' ')
+		result['time'] = float(sched_marks[-1])
+		for sched_mark in sched_marks:
+			if '[' in sched_mark and ']' in sched_mark and len(sched_mark) == 5:
+				try :
+					result['core'] = int(sched_mark.strip('[]'))
+				except:
+					pass
+		return result
+
+	def update_sched_time(self, sched_itemes, pid):
+		if pid in self.result_times:
+			for trace_mark_filter in self.result_times[pid]:
+				hierarchy.set(self.result_times[pid][trace_mark_filter], sched_itemes)
 
 ##################################################################################################################################################################
 #	DEFINE FUNCTIONS FOR CORE PARSER

@@ -39,7 +39,8 @@ class hierarchy:
 
 	@staticmethod
 	def set(hnd, set_data):
-		hnd = hnd[-1]
+    	if len(hnd) > 0:
+            hnd = hnd[-1]
 		if 'on_process' in hnd and hnd['on_process']:
 			######## Update process's state
 			tag = set_data['tag']

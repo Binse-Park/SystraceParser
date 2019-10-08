@@ -227,19 +227,23 @@ class parser_range:
 				hierarchy.set(self.result_times[pid][trace_mark_filter], sched_itemes)
 
 ##################################################################################################################################################################
-#	DEFINE FUNCTIONS FOR CORE PARSER
+#	DEFINE FUNCTIONS FOR CORRECTING DATA 
 ##################################################################################################################################################################
 
-	def parser_core_mark(self, str):
+	def parser_correct_mark(self, str):
 		result = dict()
 		str = str.strip()
+		trace_items = str.split(': ')
+		if len(trace_items) > 1:
+			type_filter = trace_items[1]
+		
 		trace_items = str.split(' ')
 		for trace_item in trace_items:
 			if '=' in trace_item:
 				trace_item = trace_item.split('=')
 				result[trace_item[0]] = trace_item[1]
 
-		trace_marks = str.split(': cpu_frequency_limits')
+		trace_marks = str.split(': ' + type_filter)
 		trace_marks = trace_marks[0].split(' ')
 
 		try:
@@ -253,11 +257,16 @@ class parser_range:
 					result['core'] = int(trace_mark.strip('[]'))
 				except:
 					pass
-		return result
+		return result, type_filter
 
-	def cpu_frequency_limits(self, str):
-		self.result_cores[CPU_FREQUENCY_LIMITS] = self.trace_mark_traversal.get(CPU_FREQUENCY_LIMITS, list())
-		self.result_cores[CPU_FREQUENCY_LIMITS].append(self.parser_core_mark(str))
+	def correct_func(self, str):
+		correct_mark_itemes, type_filter = self.parser_correct_mark(str)
+		type_filter = type_filter + ':'
+		self.result_cores[type_filter] = self.result_cores.get(type_filter, dict())
+
+		for correct_mark_item in correct_mark_itemes:
+			self.result_cores[type_filter][correct_mark_item] = self.result_cores[type_filter].get(correct_mark_item, list())
+			self.result_cores[type_filter][correct_mark_item].append(correct_mark_itemes[correct_mark_item])
 
 ##################################################################################################################################################################
 #	DEFINE FUNCTIONS FOR SCHED PARSER
@@ -324,7 +333,7 @@ class parser_range:
 			SCHED_SWITCH : self.sched_switch_func,
 			SCHED_WAKEUP : self.sched_wakeup_func,
 			SCHED_BLOCKED_REASON : self.sched_blocked_reason,
-			CPU_FREQUENCY_LIMITS : self.cpu_frequency_limits,
+			CPU_FREQUENCY_LIMITS : self.correct_func,
 		}
 
 		if len(self.result_times) > 0:
@@ -359,7 +368,7 @@ class parser_range:
 #	DEFINE FUNCTIONS FOR DATAFRAME
 ##################################################################################################################################################################
 	
-	def get_marking_time(self):
+	def get_marking_time(self, dtype='gap'):
 		df = DataFrame(columns=self.col + ['pid'])
 
 		for pid in self.result_times:
@@ -370,17 +379,32 @@ class parser_range:
 				if 'SEPERATE' in self.trace_mark_filters[title]:
 					for filter_idx in self.trace_mark_filters[title]['SEPERATE']:
 						if len(self.result_times[pid][title]) > filter_idx:
-							row_data['{} #{}'.format(title, filter_idx)] = self.result_times[pid][title][filter_idx]['time'] #* 1000
+							if dtype == 'gap':
+								row_data['{} #{}'.format(title, filter_idx)] = self.result_times[pid][title][filter_idx]['time']
+							elif dtype == 'start':
+								row_data['{} #{}'.format(title, filter_idx)] = self.result_times[pid][title][filter_idx]['start_time']	
+							elif dtype == 'end':
+								row_data['{} #{}'.format(title, filter_idx)] = self.result_times[pid][title][filter_idx]['end_time']					
 				else:
 					total_time = 0
 					for time in self.result_times[pid][title]:
-						total_time += time['time']
-					row_data[title] = total_time #* 1000
+						if dtype == 'gap':
+							total_time += time['time']
+						elif dtype == 'start':
+							total_time = time['start_time']	
+						elif dtype == 'end':
+							total_time = time['end_time']	
+					row_data[title] = total_time
 
 			df = df.append(row_data, ignore_index=True)
 		return df.set_index('pid')
 
 	def get(self, index, pid=0):
+		if index in self.result_cores.keys():
+			df = DataFrame.from_dict(self.result_cores[index])
+			#display(df)
+			return df
+
 		df = DataFrame(columns=self.col, index=index)
 
 		if pid == 0:
@@ -395,6 +419,7 @@ class parser_range:
 						df['{} #{}'.format(title, filter_idx)] = Series(hierarchy.get(self.result_times[MaxPid][title], index, num=filter_idx), index=index)
 			else:
 				df[title] = Series(hierarchy.get(self.result_times[MaxPid][title], index), index=index)
+
 		return df
 
 	def unint_sleep(self, pid=0):
@@ -451,10 +476,10 @@ class systrace_parser:
 	def get_file_name(self):
 		return parser.file_name
 
-	def get_marking_time(self):
+	def get_marking_time(self, dtype='gap'):
 		list_of_dataframe = list()
 		for parser in self.parsers_of_testing:
-			list_of_dataframe.append(parser.get_marking_time())
+			list_of_dataframe.append(parser.get_marking_time(dtype))
 		return list_of_dataframe
 
 	def get(self, index, func='avg', pids=[]):

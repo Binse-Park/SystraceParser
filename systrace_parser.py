@@ -5,7 +5,8 @@ TRACE_MARK = 'tracing_mark_write:'
 SCHED_SWITCH = 'sched_switch:'
 SCHED_WAKEUP = 'sched_wakeup:'
 SCHED_BLOCKED_REASON = 'sched_blocked_reason:'
-CPU_FREQUENCY_LIMITS = 'cpu_frequency_limits'
+CPU_FREQUENCY_LIMITS = 'cpu_frequency_limits:'
+CPU_IDLE = 'cpu_idle:'
 
 TAG_RUNNING = 'RUNNING'
 TAG_RUNNABLE = 'RUNNABLE'
@@ -27,6 +28,7 @@ class hierarchy:
 	def open(current_time):
 		hnd = dict()
 		hnd['time'] = current_time
+		hnd['start_time'] = current_time
 		hnd['sched_time'] = current_time
 		hnd['on_process'] = True
 		return hnd
@@ -34,13 +36,14 @@ class hierarchy:
 	@staticmethod
 	def close(hnd, current_time):
 		hnd['time'] = current_time - hnd['time']
+		hnd['end_time'] = current_time
 		hnd['on_process'] = False
 		hnd[TAG_RUNNING] = hnd.get(TAG_RUNNING, 0) + (current_time - hnd['sched_time'])
 
 	@staticmethod
 	def set(hnd, set_data):
-    	if len(hnd) > 0:
-            hnd = hnd[-1]
+		if len(hnd) > 0:
+			hnd = hnd[-1]
 		if 'on_process' in hnd and hnd['on_process']:
 			######## Update process's state
 			tag = set_data['tag']
@@ -334,6 +337,7 @@ class parser_range:
 			SCHED_WAKEUP : self.sched_wakeup_func,
 			SCHED_BLOCKED_REASON : self.sched_blocked_reason,
 			CPU_FREQUENCY_LIMITS : self.correct_func,
+			CPU_IDLE : self.correct_func,
 		}
 
 		if len(self.result_times) > 0:

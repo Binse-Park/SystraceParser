@@ -5,7 +5,7 @@ TRACE_MARK = 'tracing_mark_write:'
 SCHED_SWITCH = 'sched_switch:'
 SCHED_WAKEUP = 'sched_wakeup:'
 SCHED_BLOCKED_REASON = 'sched_blocked_reason:'
-CPU_FREQUENCY_LIMITS = 'cpu_frequency_limits:'
+CPU_FREQUENCY_LIMITS = 'cpu_frequency_limits'
 CPU_IDLE = 'cpu_idle:'
 
 TAG_RUNNING = 'RUNNING'
@@ -42,8 +42,8 @@ class hierarchy:
 
 	@staticmethod
 	def set(hnd, set_data):
-		if len(hnd) > 0:
-			hnd = hnd[-1]
+    	if len(hnd) > 0:
+            hnd = hnd[-1]
 		if 'on_process' in hnd and hnd['on_process']:
 			######## Update process's state
 			tag = set_data['tag']

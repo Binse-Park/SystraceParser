@@ -1,5 +1,6 @@
 import numpy as np
 from pandas import Series, DataFrame
+import copy
 
 TRACE_MARK = 'tracing_mark_write:'
 SCHED_SWITCH = 'sched_switch:'
@@ -13,6 +14,8 @@ TAG_RUNNABLE = 'RUNNABLE'
 TAG_SLEEPING = 'SLEEPING'
 TAG_UNINTERUPTIBLE_SLEEP = 'UNINTERUPTIBLE_SLEEP'
 TAG_UNINTERUPTIBLE_SLEEP_IO = 'UNINTERUPTIBLE_SLEEP(I/O)'
+TAG_CORE_IDLE = 'I'
+TAG_CORE_RUNNING = 'R'
 
 ##################################################################################################################################################################
 ##################################################################################################################################################################
@@ -23,7 +26,6 @@ TAG_UNINTERUPTIBLE_SLEEP_IO = 'UNINTERUPTIBLE_SLEEP(I/O)'
 ##################################################################################################################################################################
 
 class hierarchy:
-
 	@staticmethod
 	def open(current_time):
 		hnd = dict()
@@ -41,9 +43,9 @@ class hierarchy:
 		hnd[TAG_RUNNING] = hnd.get(TAG_RUNNING, 0) + (current_time - hnd['sched_time'])
 
 	@staticmethod
-	def set(hnd, set_data):
-    	if len(hnd) > 0:
-            hnd = hnd[-1]
+	def set(hnd, set_data, result_core_state):
+		if len(hnd) > 0:
+			hnd = hnd[-1]
 		if 'on_process' in hnd and hnd['on_process']:
 			######## Update process's state
 			tag = set_data['tag']
@@ -63,10 +65,17 @@ class hierarchy:
 				hnd[tag] = hnd.get(tag, 0) + (set_data['time'] - hnd['sched_time'])
 				hnd['sched_time'] = set_data['time']
 				######## Update core number
-				if TAG_RUNNING == tag:
+				if tag == TAG_RUNNING:
 					hnd['core'] = hnd.get('core', [0] * 8)  #conf["MAX_CORE_NUM"]
 					if set_data['core'] < 8:  #conf["MAX_CORE_NUM"]:
 						hnd['core'][set_data['core']] += 1
+				elif tag == TAG_RUNNABLE:
+					core_state = copy.deepcopy(result_core_state)
+					core_state['time'] = set_data['time']
+					core_state['selected'] = set_data['core']
+					core_state[core_state['selected']] = 'V'
+					hnd['stat_core'] = hnd.get('stat_core', list())
+					hnd['stat_core'].append(core_state)
 
 	@staticmethod
 	def get_from_index(hnd, index):

@@ -6,7 +6,7 @@ TRACE_MARK = 'tracing_mark_write:'
 SCHED_SWITCH = 'sched_switch:'
 SCHED_WAKEUP = 'sched_wakeup:'
 SCHED_BLOCKED_REASON = 'sched_blocked_reason:'
-CPU_FREQUENCY_LIMITS = 'cpu_frequency_limits'
+CPU_FREQUENCY_LIMITS = 'cpu_frequency_limits:'
 CPU_IDLE = 'cpu_idle:'
 
 TAG_RUNNING = 'RUNNING'

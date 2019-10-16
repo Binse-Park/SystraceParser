@@ -86,6 +86,7 @@ class hierarchy:
 				return 0
 			else:
 				return hnd['core'][core_num]
+            
 		depth = index.split('//')
 		if len(depth) > 1 and depth[0] in hnd:
 			return hnd[depth[0]].get(depth[1], 0)
@@ -102,6 +103,19 @@ class hierarchy:
 				column_data = map(np.add, column_data, [hierarchy.get_from_index(num, idx) for idx in get_data])
 		return column_data
 
+    
+	@staticmethod
+	def get_rawdata(hnd, index, num=-1):
+		if num >= 0:
+			item = hnd[num]
+			if index in item:
+				return item[index]
+		else:
+			for item in hnd:
+				if index in item:
+					return item[index]
+		return 0
+    
 	@staticmethod
 	def unint_sleep(hnd, num=-1):
 		depthes = ['uninter_reason', 'uninter_reason_io']

@@ -227,6 +227,53 @@ class parser_range:
 		#        print(str)
 		#        print(trace_mark)
 
+        
+        
+##################################################################################################################################################################
+#	DEFINE FUNCTIONS FOR CORRECTING DATA 
+##################################################################################################################################################################
+
+	def parser_correct_mark(self, str):
+		result = dict()
+		str = str.strip()
+		trace_items = str.split(': ')
+		if len(trace_items) > 1:
+			type_filter = trace_items[1]
+		
+		trace_items = str.split(' ')
+		for trace_item in trace_items:
+			if '=' in trace_item:
+				trace_item = trace_item.split('=')
+				result[trace_item[0]] = trace_item[1]
+
+		trace_marks = str.split(': ' + type_filter)
+		trace_marks = trace_marks[0].split(' ')
+
+		try:
+			result['time'] = float(trace_marks[-1])
+		except:
+			pass
+
+		for trace_mark in trace_marks:
+			if '[' in trace_mark and ']' in trace_mark and len(trace_mark) == 5:
+				try :
+					result['core'] = int(trace_mark.strip('[]'))
+				except:
+					pass
+		return result, type_filter
+
+	def correct_func(self, str):
+		correct_mark_itemes, type_filter = self.parser_correct_mark(str)
+		type_filter = type_filter + ':'
+		self.result_cores[type_filter] = self.result_cores.get(type_filter, dict())
+
+		for correct_mark_item in correct_mark_itemes:
+			self.result_cores[type_filter][correct_mark_item] = self.result_cores[type_filter].get(correct_mark_item, list())
+			self.result_cores[type_filter][correct_mark_item].append(correct_mark_itemes[correct_mark_item])
+
+##################################################################################################################################################################
+#	DEFINE FUNCTIONS FOR SCHED PARSER
+##################################################################################################################################################################
 
 	def parser_sched(self, str):
 		result = dict()

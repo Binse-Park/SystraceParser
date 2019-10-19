@@ -296,10 +296,21 @@ class parser_range:
 		return result
 
 	def update_sched_time(self, sched_itemes, pid):
-		if pid in self.result_times:
-			for trace_mark_filter in self.result_times[pid]:
-				hierarchy.set(self.result_times[pid][trace_mark_filter], sched_itemes)
+		if 'prev_state' in sched_itemes:
+			if sched_itemes['prev_state'] == 'R':
+				self.result_core_state[sched_itemes['core']] = TAG_CORE_RUNNING
+			else: #if sched_itemes['prev_state'] == 'D':
+				self.result_core_state[sched_itemes['core']] = TAG_CORE_IDLE
+		#if 'next_comm' in sched_itemes:
+		#	print("update_sched_time -> time : {}  next_comm : {}  tag : {}  core : {}  curstate : {}".format(sched_itemes['time'], sched_itemes['next_comm'], sched_itemes['tag'], sched_itemes['core'], self.result_core_state))
 
+		if pid in self.result_times:
+			#self.result_times[pid] = self.result_times.get(pid, dict())
+			for trace_mark_filter in self.result_times[pid]:
+				#print("before {}".format(self.result_core_state))
+				hierarchy.set(self.result_times[pid][trace_mark_filter], sched_itemes, self.result_core_state)
+				#print("after {}".format(self.result_core_state))
+                
 ##################################################################################################################################################################
 #	DEFINE FUNCTIONS FOR CORRECTING DATA 
 ##################################################################################################################################################################

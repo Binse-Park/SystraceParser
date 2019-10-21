@@ -76,7 +76,7 @@ class hierarchy:
 					core_state[core_state['selected']] = 'V'
 					hnd['stat_core'] = hnd.get('stat_core', list())
 					hnd['stat_core'].append(core_state)
-
+                    
 	@staticmethod
 	def get_from_index(hnd, index):
 		#print(index + '/' + index[:4])
@@ -86,7 +86,7 @@ class hierarchy:
 				return 0
 			else:
 				return hnd['core'][core_num]
-            
+		
 		depth = index.split('//')
 		if len(depth) > 1 and depth[0] in hnd:
 			return hnd[depth[0]].get(depth[1], 0)
@@ -103,7 +103,7 @@ class hierarchy:
 				column_data = map(np.add, column_data, [hierarchy.get_from_index(num, idx) for idx in get_data])
 		return column_data
 
-    
+
 	@staticmethod
 	def get_rawdata(hnd, index, num=-1):
 		if num >= 0:
@@ -115,7 +115,7 @@ class hierarchy:
 				if index in item:
 					return item[index]
 		return 0
-    
+
 	@staticmethod
 	def unint_sleep(hnd, num=-1):
 		depthes = ['uninter_reason', 'uninter_reason_io']
@@ -227,8 +227,8 @@ class parser_range:
 		#        print(str)
 		#        print(trace_mark)
 
-        
-        
+
+
 ##################################################################################################################################################################
 #	DEFINE FUNCTIONS FOR CORRECTING DATA 
 ##################################################################################################################################################################
@@ -310,81 +310,11 @@ class parser_range:
 				#print("before {}".format(self.result_core_state))
 				hierarchy.set(self.result_times[pid][trace_mark_filter], sched_itemes, self.result_core_state)
 				#print("after {}".format(self.result_core_state))
-                
-##################################################################################################################################################################
-#	DEFINE FUNCTIONS FOR CORRECTING DATA 
-##################################################################################################################################################################
-
-	def parser_correct_mark(self, str):
-		result = dict()
-		str = str.strip()
-		trace_items = str.split(': ')
-		if len(trace_items) > 1:
-			type_filter = trace_items[1]
-		
-		trace_items = str.split(' ')
-		for trace_item in trace_items:
-			if '=' in trace_item:
-				trace_item = trace_item.split('=')
-				result[trace_item[0]] = trace_item[1]
-
-		trace_marks = str.split(': ' + type_filter)
-		trace_marks = trace_marks[0].split(' ')
-
-		try:
-			result['time'] = float(trace_marks[-1])
-		except:
-			pass
-
-		for trace_mark in trace_marks:
-			if '[' in trace_mark and ']' in trace_mark and len(trace_mark) == 5:
-				try :
-					result['core'] = int(trace_mark.strip('[]'))
-				except:
-					pass
-		return result, type_filter
-
-	def correct_func(self, str):
-		correct_mark_itemes, type_filter = self.parser_correct_mark(str)
-		type_filter = type_filter + ':'
-		self.result_cores[type_filter] = self.result_cores.get(type_filter, dict())
-
-		for correct_mark_item in correct_mark_itemes:
-			self.result_cores[type_filter][correct_mark_item] = self.result_cores[type_filter].get(correct_mark_item, list())
-			self.result_cores[type_filter][correct_mark_item].append(correct_mark_itemes[correct_mark_item])
-
-##################################################################################################################################################################
-#	DEFINE FUNCTIONS FOR SCHED PARSER
-##################################################################################################################################################################
-
-	def parser_sched(self, str):
-		result = dict()
-		str = str.strip()
-		sched_items = str.split(' ')
-		for sched_item in sched_items:
-			if '=' in sched_item:
-				sched_item = sched_item.split('=')
-				result[sched_item[0]] = sched_item[1]
-
-		sched_marks = str.split(': sched_')
-		sched_marks = sched_marks[0].split(' ')
-		result['time'] = float(sched_marks[-1])
-		for sched_mark in sched_marks:
-			if '[' in sched_mark and ']' in sched_mark and len(sched_mark) == 5:
-				try :
-					result['core'] = int(sched_mark.strip('[]'))
-				except:
-					pass
-		return result
-
-	def update_sched_time(self, sched_itemes, pid):
-		if pid in self.result_times:
-			for trace_mark_filter in self.result_times[pid]:
-				hierarchy.set(self.result_times[pid][trace_mark_filter], sched_itemes)
 
 
 	def sched_switch_func(self, str):
 		sched_itemes = self.parser_sched(str)
+		#print("sched_switch_func -> time : {}  next_comm : {}".format(sched_itemes['time'], sched_itemes['next_comm']))
 		if 'prev_pid' in sched_itemes:
 			sched_itemes['tag'] = TAG_RUNNING
 			self.update_sched_time(sched_itemes, int(sched_itemes['prev_pid']))
@@ -408,7 +338,6 @@ class parser_range:
 					sched_itemes['tag'] = TAG_UNINTERUPTIBLE_SLEEP
 			else:
 				sched_itemes['tag'] = TAG_UNINTERUPTIBLE_SLEEP
-
 			self.update_sched_time(sched_itemes, int(sched_itemes['pid']))
 
 
@@ -508,6 +437,24 @@ class parser_range:
 
 		return df
 
+	def get_rawdata(self, index, pid=0):
+		result = dict()
+
+		if pid == 0:
+			MaxPid = self.MaxPid
+		else:
+			MaxPid = pid
+
+		for title in self.result_times[MaxPid]:
+			if 'SEPERATE' in self.trace_mark_filters[title]:
+				for filter_idx in self.trace_mark_filters[title]['SEPERATE']:
+					if len(self.result_times[MaxPid][title]) > filter_idx:
+						result['{} #{}'.format(title, filter_idx)] = hierarchy.get_rawdata(self.result_times[MaxPid][title], index, num=filter_idx)
+			else:
+				result[title] = hierarchy.get_rawdata(self.result_times[MaxPid][title], index)
+
+		return result
+
 	def unint_sleep(self, pid=0):
 		index_data = list()
 
@@ -557,7 +504,7 @@ class systrace_parser:
 	def run(self):
 		for parser in self.parsers_of_testing:
 			parser.run()
-			print("Parsing {} lines are Ok".format(len(parser.raw_data)))
+			print("Parsing {} - {} lines are Ok".format(parser.title.split('/')[-1], len(parser.raw_data)))
 
 	def get_file_name(self):
 		return parser.file_name

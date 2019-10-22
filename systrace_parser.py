@@ -43,7 +43,10 @@ class hierarchy:
 		hnd[TAG_RUNNING] = hnd.get(TAG_RUNNING, 0) + (current_time - hnd['sched_time'])
 
 	@staticmethod
-	def set(hnd, set_data, result_core_state):
+	def set(hnd, set_data, result_core_state, storage_lock_contention):
+		#if 'next_comm' in set_data:	
+		#	print("time : {}  next_comm : {}  tag : {}".format(set_data['time'], set_data['next_comm'], set_data['tag']))
+		#result_core_state = class_parser_range.result_core_state
 		if len(hnd) > 0:
 			hnd = hnd[-1]
 		if 'on_process' in hnd and hnd['on_process']:
@@ -76,6 +79,16 @@ class hierarchy:
 					core_state[core_state['selected']] = 'V'
 					hnd['stat_core'] = hnd.get('stat_core', list())
 					hnd['stat_core'].append(core_state)
+				elif tag == TAG_SLEEPING:
+					print("time : {} -----------------------------------------------------".format( set_data['time'] ))
+					#display(storage_lock_contention)
+					for lock_contention in storage_lock_contention:
+						if 'duration' in lock_contention:
+							print("time : {}  sched_time : {}".format( lock_contention['time'], hnd['sched_time'] ))
+							if lock_contention['time'] > hnd['sched_time']:
+								hnd['lock_contention'] = hnd.get('lock_contention', 0) + (set_data['time'] - hnd['sched_time'])
+								display(hnd['lock_contention'])
+								break
                     
 	@staticmethod
 	def get_from_index(hnd, index):

@@ -164,6 +164,7 @@ class parser_range:
 		self.trace_mark_traversal = dict() # Storing the systrace tag's context to check end of it.
 		self.result_cores = dict() # Storing a data to be expected for marking.
 		self.result_core_state = dict()
+		self.storage_lock_contention = list()
 
 	def parser_trace_mark(self, str):
 		result = dict()

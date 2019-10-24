@@ -206,9 +206,21 @@ class parser_range:
 			self.trace_mark_traversal[trace_mark['pid']] = self.trace_mark_traversal.get(trace_mark['pid'], list())
 			if trace_mark['type'] == 'B':
 				self.trace_mark_traversal[trace_mark['pid']].append(trace_mark['context'])
+				if 'monitor contention with owner' in trace_mark['context']:
+					self.storage_lock_contention.append(trace_mark);
+					#display(trace_mark)
+					#for pid in self.result_times:
+					#	for trace_mark_filter in self.result_times[pid]:
+					#		display(self.result_times[pid][trace_mark_filter])
 			elif trace_mark['type'] == 'E' and len(self.trace_mark_traversal[trace_mark['pid']]) > 0:
 				trace_mark['context'] = self.trace_mark_traversal[trace_mark['pid']][-1]
 				self.trace_mark_traversal[trace_mark['pid']] = self.trace_mark_traversal[trace_mark['pid']][0 : -1]
+				if 'monitor contention with owner' in trace_mark['context']:
+					for lock_contention in self.storage_lock_contention:
+						if not 'duration' in lock_contention:
+							if lock_contention['pid'] == trace_mark['pid']:
+								lock_contention['duration'] = trace_mark['time'] - lock_contention['time']
+								#display(lock_contention)
 			#elif '18805' in str:
 			#	print('>>>>>>>>>>>>>>>>' + str)
 		#elif '18805' in str:

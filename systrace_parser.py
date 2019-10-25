@@ -334,9 +334,8 @@ class parser_range:
 			#self.result_times[pid] = self.result_times.get(pid, dict())
 			for trace_mark_filter in self.result_times[pid]:
 				#print("before {}".format(self.result_core_state))
-				hierarchy.set(self.result_times[pid][trace_mark_filter], sched_itemes, self.result_core_state)
+				hierarchy.set(self.result_times[pid][trace_mark_filter], sched_itemes, self.result_core_state, self.storage_lock_contention)
 				#print("after {}".format(self.result_core_state))
-
 
 	def sched_switch_func(self, str):
 		sched_itemes = self.parser_sched(str)

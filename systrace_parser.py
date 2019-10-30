@@ -64,6 +64,8 @@ class hierarchy:
 				if 'process_state' in hnd and len(hnd['process_state']) > 0:
 					tag = hnd['process_state']
 					hnd['process_state'] = ''
+
+				sched_time = hnd['sched_time']
 				######## Update processing time
 				hnd[tag] = hnd.get(tag, 0) + (set_data['time'] - hnd['sched_time'])
 				hnd['sched_time'] = set_data['time']
@@ -80,15 +82,18 @@ class hierarchy:
 					hnd['stat_core'] = hnd.get('stat_core', list())
 					hnd['stat_core'].append(core_state)
 				elif tag == TAG_SLEEPING:
-					print("time : {} -----------------------------------------------------".format( set_data['time'] ))
+					#print("current time : {}   sched_time : {}-----------------------------------------------------".format( set_data['time'], sched_time ))
 					#display(storage_lock_contention)
+					found_flag = False
 					for lock_contention in storage_lock_contention:
 						if 'duration' in lock_contention:
-							print("time : {}  sched_time : {}".format( lock_contention['time'], hnd['sched_time'] ))
-							if lock_contention['time'] > hnd['sched_time']:
-								hnd['lock_contention'] = hnd.get('lock_contention', 0) + (set_data['time'] - hnd['sched_time'])
-								display(hnd['lock_contention'])
-								break
+							#print("lock_contention time : {}".format( lock_contention['time'] ))
+							if lock_contention['time'] > sched_time:
+								lock_contention['effection'] = 'O'
+								found_flag = True
+					if found_flag:
+						hnd['lock_contention'] = hnd.get('lock_contention', 0) + (set_data['time'] - sched_time)
+						#display(hnd['lock_contention'])
                     
 	@staticmethod
 	def get_from_index(hnd, index):

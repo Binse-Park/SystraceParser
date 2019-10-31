@@ -574,6 +574,7 @@ class systrace_parser:
 			df /= len(self.parsers_of_testing)
 		return df
 
+	@staticmethod
 	def process_state(self):
 		return ['time', TAG_RUNNING, TAG_RUNNABLE, TAG_SLEEPING, TAG_UNINTERUPTIBLE_SLEEP, TAG_UNINTERUPTIBLE_SLEEP_IO]
 

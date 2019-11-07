@@ -94,7 +94,7 @@ class hierarchy:
 					if found_flag:
 						hnd['lock_contention'] = hnd.get('lock_contention', 0) + (set_data['time'] - sched_time)
 						#display(hnd['lock_contention'])
-                    
+
 	@staticmethod
 	def get_from_index(hnd, index):
 		#print(index + '/' + index[:4])
@@ -575,7 +575,7 @@ class systrace_parser:
 		return df
 
 	@staticmethod
-	def process_state(self):
+	def process_state():
 		return ['time', TAG_RUNNING, TAG_RUNNABLE, TAG_SLEEPING, TAG_UNINTERUPTIBLE_SLEEP, TAG_UNINTERUPTIBLE_SLEEP_IO]
 
 	def cores(self):

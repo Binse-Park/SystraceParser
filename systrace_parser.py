@@ -433,11 +433,11 @@ class parser_range:
 				else:
 					total_time = 0
 					for time in self.result_times[pid][title]:
-						if dtype == 'gap':
+						if dtype == 'gap' and 'time' in time :
 							total_time += time['time']
-						elif dtype == 'start':
+						elif dtype == 'start' and 'start_time' in time :
 							total_time = time['start_time']	
-						elif dtype == 'end':
+						elif dtype == 'end' and 'end_time' in time :
 							total_time = time['end_time']	
 					row_data[title] = total_time
 

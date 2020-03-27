@@ -445,25 +445,32 @@ class parser_range:
 		return df.set_index('pid')
 
 	def get(self, index, pid=0):
+		df = None
+
 		if index in self.result_cores.keys():
 			df = DataFrame.from_dict(self.result_cores[index])
 			#display(df)
 			return df
 
-		df = DataFrame(columns=self.col, index=index)
+		try:
+			df = DataFrame(columns=self.col, index=index)
 
-		if pid == 0:
-			MaxPid = self.MaxPid
-		else:
-			MaxPid = pid
-
-		for title in self.result_times[MaxPid]:
-			if 'SEPERATE' in self.trace_mark_filters[title]:
-				for filter_idx in self.trace_mark_filters[title]['SEPERATE']:
-					if len(self.result_times[MaxPid][title]) > filter_idx:
-						df['{} #{}'.format(title, filter_idx)] = Series(hierarchy.get(self.result_times[MaxPid][title], index, num=filter_idx), index=index)
+			if pid == 0:
+				MaxPid = self.MaxPid
 			else:
-				df[title] = Series(hierarchy.get(self.result_times[MaxPid][title], index), index=index)
+				MaxPid = pid
+
+			for title in self.result_times[MaxPid]:
+				if 'SEPERATE' in self.trace_mark_filters[title]:
+					for filter_idx in self.trace_mark_filters[title]['SEPERATE']:
+						if len(self.result_times[MaxPid][title]) > filter_idx:
+							df['{} #{}'.format(title, filter_idx)] = Series(hierarchy.get(self.result_times[MaxPid][title], index, num=filter_idx), index=index)
+				else:
+					df[title] = Series(hierarchy.get(self.result_times[MaxPid][title], index), index=index)
+		except:
+			print("ERROR!!!   - parser_range::get() - columns has no the item") 
+			print("           - item : {}".format(index)) 
+			print("           - result_cores.keys() : {}".format(self.col)) 
 
 		return df
 
